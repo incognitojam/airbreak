@@ -27,7 +27,7 @@ class ASFirmware(object):
     def __init__(self, file):
         self.fw = file.read()
         self.fw = list(self.fw)
-        self.crcfunc = crc_func = crcmod.predefined.mkCrcFun('crc-ccitt-false')
+        self.crcfunc = crcmod.predefined.mkCrcFun('crc-ccitt-false')
         
         self.validate()
         
@@ -87,7 +87,8 @@ class ASFirmware(object):
 
         return i1
 
-    def patch(self, patchdata, addr=None, dataseq=None, hash=None, verbose=True, checkreserved=True, checkempty=False, clobber=False):
+    def patch(self, patchdata, addr=None, dataseq=None, hash=None, verbose=True, checkreserved=True, checkempty=False,
+              clobber=False):
         """Updates firmware data with patchdata, based on address, sequence, or hash of sequence"""
         
         #I love Python3(TM)
@@ -206,7 +207,7 @@ class ASFirmware(object):
             self.fw[(palletaddr + 16 + (i*4)):(palletaddr + 16 + (i*4 + 4))] = list(struct.pack('I', image.pallete[i]))
 
     def write_output(self, filename, overwrite=False):
-        if os.path.exists(filename) and (overwrite == False):
+        if os.path.exists(filename) and not overwrite:
             raise IOError("File " + filename + "exists already.")
     
         f = open(filename, "wb")
@@ -244,9 +245,10 @@ class ASFirmwarePatches(object):
     """This class contains the actual patching scripts for specific items"""
 
     known_units = [
-        ASUnits("AirSense 10 Autoset", "37028", "SX567-0401", "533b91127aa22e05b933db203ad56c449dc12a8c3fd62f57bd88c472a8061775"),
+        ASUnits("AirSense 10 Autoset", "37028", "SX567-0401",
+                "533b91127aa22e05b933db203ad56c449dc12a8c3fd62f57bd88c472a8061775"),
     ]
-        
+
     def __init__(self, asf):
         self.asf = asf
 
@@ -260,7 +262,8 @@ class ASFirmwarePatches(object):
     def change_text(self):
         asf.patch(b'HACKED!', dataseq=b'Home\x00\x00', clobber=True)
         asf.patch(b'NOT FOR USE\x00', dataseq=b'Are you sure?\x00\x00', clobber=True)
-        asf.patch(b'WARNING! WARNING! Ventilator test firmware: Not for humans!\x00', dataseq=b'Airplane Mode is currently On, do you wish to turn it Off?', clobber=True)
+        asf.patch(b'WARNING! WARNING! Ventilator test firmware: Not for humans!\x00',
+                  dataseq=b'Airplane Mode is currently On, do you wish to turn it Off?', clobber=True)
 
     def unlock_ui_limits(self):
         
