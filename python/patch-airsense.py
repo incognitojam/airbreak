@@ -258,7 +258,7 @@ class ASFirmwarePatches(object):
             asf.patch(b'\xc0\x46', 0xF0, clobber=True)
         else:
             raise IOError("Unknown hash: %s"%self.asf.hash)
-            
+
     def change_text(self):
         asf.patch(b'HACKED!', dataseq=b'Home\x00\x00', clobber=True)
         asf.patch(b'NOT FOR USE\x00', dataseq=b'Are you sure?\x00\x00', clobber=True)
@@ -301,7 +301,6 @@ class ASFirmwarePatches(object):
         else:
            raise IOError("Unknown hash: %s"%self.asf.hash)
 
-    
     def all_menu(self):
         if self.asf.hash == self.known_units[0].hash:
             # If you want all menu items to always be visible, let this section run
@@ -332,7 +331,6 @@ class ASFirmwarePatches(object):
            raise IOError("Unknown hash: %s"%self.asf.hash)
 
     def patch_logos(self):
-
         #Change these to adjust logos, rest should work automatically.
         #NB - be sure of settings when saving file:
         #     'text' was exported with `Compressed, RLE4`
@@ -361,7 +359,6 @@ class ASFirmwarePatches(object):
         self.asf.patch_image(setting_loc, pallete_addr, pixels_addr, text)
 
     def patch_uart3_monitor(self):
-
         irq_offset, irq_bin = self.asf.prepare_bin("../serial_monitor/monitor_irq")
         
         # Need to rebuild if location changes - for now just fix it, check we've got room
@@ -391,7 +388,7 @@ class ASFirmwarePatches(object):
         # this moving. Address needs to be +1 for normal code jump location.
         irq_location_packed = struct.pack("<I", 0x08000000 + irq_location + 1)
         self.asf.patch(irq_location_packed, 0x402dc, clobber=True)
-        
+
     def patch_graph(self):
         """Add special graph module"""
         f = open("../graph.bin", "rb")
@@ -417,7 +414,7 @@ class ASFirmwarePatches(object):
             self.asf.patch(fw, 0xBB734, clobber=True)
         else:
             raise IOError("Unknown hash: %s"%self.asf.hash)
-            
+
 def str2bool(v):
     if isinstance(v, bool):
        return v
@@ -432,9 +429,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Patch Airsense Firmware with various updates.')
     parser.add_argument('INFILE', help="Input original binary file")
     parser.add_argument('OUTFILE', help="Output patched file")
-    
+
     parser.add_argument('OPERATION', help="Operation to perform", choices=['INFO', 'PATCH'])
-    
+
     patch_list_yn = [
         {'arg':"patch-bypass-start",    'desc':"Bypass checks that block start-up.",                    'default':True,  'function':'bypass_startcheck', 'flags':0},
         {'arg':"patch-unlock-uilimits", 'desc':"Unlock higher UI limits.",                              'default':True,  'function':'unlock_ui_limits',  'flags':(1<<1)},
@@ -466,14 +463,13 @@ if __name__ == "__main__":
     b.close()
     
     if args.OPERATION == "PATCH":
-
         patches = ASFirmwarePatches(asf)
-        
+
         print("PATCH: Change text on main menu and airplane mode")
         patches.change_text()
-        
+
         flags = 0
-        
+
         for patch in patch_list_yn:
             if str2bool(getattr(args, patch['arg'].replace("-","_"))):
                 print("PATCH: " + patch['desc'])
@@ -484,7 +480,7 @@ if __name__ == "__main__":
         if asf.hash == patches.known_units[0].hash:
             print("PATCH: Adding str of FLAGS=0x%02x"%flags)
             asf.patch(b'FLAGS=0x%02x'%flags, 0x17588, clobber=True)
-            
+
             #Also add git commit hash (skipped for now)
             #COMMIT_HASH=$(git log -n1 --format=format:"%H" | head -c 7)
             #asf.patch(b'GIT=%s\x00'%COMMIT_HASH, 0x17764)
